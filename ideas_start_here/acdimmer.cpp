@@ -42,9 +42,13 @@ void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins)
 
 void acdimmer_bulb_set(unsigned int light_id, unsigned int brightness)
 {
-    if(brightness <= 128 && brightness >= 0)
+    if(brightness <= 128 && brightness >= OFF_VAL)
     {
       dim_level[light_id] = MAX_DIM_LEVEL - brightness;
+    }
+    else if (brightness < OFF_VAL)
+    {
+      dim_level[light_id] = OFF_VAL;
     }
 }
 
@@ -52,22 +56,26 @@ void acdimmer_bulb_array_set(unsigned int * p_brightness)
 {
     for (int i = 0; i < num_of_bulbs; i++)
     {
-      dim_level[i] = MAX_DIM_LEVEL - p_brightness[i];
+          if(p_brightness[i] <= 128 && p_brightness[i] >= OFF_VAL)
+          {
+            dim_level[i] = MAX_DIM_LEVEL - p_brightness[i];
+          }
+          else if (p_brightness[i] < OFF_VAL)
+          {
+            dim_level[i] = OFF_VAL;
+          }
     }
 }
 
-static void zero_cross_detect(void) {
-
+static void zero_cross_detect(void)
+{
   int blank[MAX_LIGHT_NUM] = {0};
   memcpy(dim_counter, blank, MAX_LIGHT_NUM);
-
   for (int i = 0; i < num_of_bulbs; i++)
   {
     digitalWrite(light_pin[i], LOW);       // turn off TRIAC (and AC)
     zero_cross[i] = true;
   }
-
-  
 }
 
 // Turn on the TRIAC at the appropriate time
@@ -95,4 +103,9 @@ void acdimmer_enable(void)
 {
   Timer1.attachInterrupt(dim_check, freqStep);
   attachInterrupt(0, zero_cross_detect, RISING);   // Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
+}
+
+void sleep_state_enter(void)
+{
+  
 }
