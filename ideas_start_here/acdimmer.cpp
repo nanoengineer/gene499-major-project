@@ -50,7 +50,7 @@ void acdimmer_bulb_set(unsigned int light_id, unsigned int brightness)
 
 void acdimmer_bulb_array_set(unsigned int * p_brightness)
 {
-    for (int i = 0; i < num_of_bulbs; i ++)
+    for (int i = 0; i < num_of_bulbs; i++)
     {
       dim_level[i] = MAX_DIM_LEVEL - p_brightness[i];
     }
@@ -59,13 +59,15 @@ void acdimmer_bulb_array_set(unsigned int * p_brightness)
 static void zero_cross_detect(void) {
 
   int blank[MAX_LIGHT_NUM] = {0};
-  memcpy(zero_cross, blank, MAX_LIGHT_NUM);
   memcpy(dim_counter, blank, MAX_LIGHT_NUM);
 
   for (int i = 0; i < num_of_bulbs; i++)
   {
     digitalWrite(light_pin[i], LOW);       // turn off TRIAC (and AC)
+    zero_cross[i] = true;
   }
+
+  
 }
 
 // Turn on the TRIAC at the appropriate time
