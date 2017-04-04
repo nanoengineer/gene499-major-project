@@ -29,6 +29,7 @@ static unsigned int freqStep = 65;    // This is the delay-per-brightness step i
 //
 // 1000000 us / 120 Hz = 8333 uS, length of one half-wave.
 static int          timerId[MAX_LIGHT_NUM] = {0};
+static ish_state_t m_current_state = SLEEP_STATE;
 SimpleTimer timer;
 
 
@@ -112,9 +113,31 @@ void acdimmer_enable(void)
 static void path_trace(unsigned int * p_path, unsigned int node_count, long path_time)
 {
 
+    for (unsigned int i = 0; i < node_count; i++)
+    {
+      
+    }
 }
 
-void sleep_state_enter(void)
+void sleep_state_enter (void)
+{
+
+}
+
+void single_state_enter( ish_state_t state )
+{
+  if (state == SINGLE_LEFT_STATE)
+  {
+
+
+  }
+  else if (state == SINGLE_RIGHT_STATE)
+  {
+
+  }
+}
+
+void double_state_enter(void)
 {
 
 }

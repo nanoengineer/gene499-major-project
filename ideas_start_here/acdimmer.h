@@ -2,7 +2,10 @@
 #ifndef __ACDIMMER_H_
 #define __ACDIMMER_H_
 
+#include "ish_states.h"
+
 #define OFF_VAL (20)
+
 
 void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins);
 
@@ -13,5 +16,9 @@ void acdimmer_bulb_array_set(unsigned int * p_brightness); //sets the brightness
 void acdimmer_enable(void);
 
 void sleep_state_enter(void);
+
+void single_state_enter(ish_state_t state);
+
+void double_state_enter(void);
 
 #endif //__ACDIMMER_H_
