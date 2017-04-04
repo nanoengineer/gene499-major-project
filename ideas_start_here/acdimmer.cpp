@@ -87,7 +87,7 @@ static void zero_cross_detect(void)
 // Turn on the TRIAC at the appropriate time
 static void dim_check(void)
 {
-  Serial.println("dc");
+  //Serial.println("dc");
   for(int i = 0; i < num_of_bulbs; i++)
   {
     if(zero_cross[i] == true)
