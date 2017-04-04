@@ -12,4 +12,6 @@ void acdimmer_bulb_array_set(unsigned int * p_brightness); //sets the brightness
 
 void acdimmer_enable(void);
 
+void sleep_state_enter(void);
+
 #endif //__ACDIMMER_H_

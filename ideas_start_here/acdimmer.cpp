@@ -2,6 +2,7 @@
 #include "acdimmer.h"
 #include "Arduino.h"
 #include "TimerOne.h"
+#include "SimpleTimer.h"
 
 #define MAX_LIGHT_NUM (12)
 #define MAX_DIM_LEVEL (128)
@@ -27,6 +28,8 @@ static unsigned int freqStep = 65;    // This is the delay-per-brightness step i
 // (1000000 uS / 120 Hz) / 128 brightness steps = 65 uS / brightness step
 //
 // 1000000 us / 120 Hz = 8333 uS, length of one half-wave.
+static int          timerId[MAX_LIGHT_NUM] = {0};
+SimpleTimer timer;
 
 
 void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins)
@@ -105,7 +108,13 @@ void acdimmer_enable(void)
   attachInterrupt(0, zero_cross_detect, RISING);   // Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
 }
 
+
+static void path_trace(unsigned int * p_path, unsigned int node_count, long path_time)
+{
+
+}
+
 void sleep_state_enter(void)
 {
-  
+
 }

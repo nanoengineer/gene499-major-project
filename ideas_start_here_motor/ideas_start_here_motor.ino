@@ -6,8 +6,8 @@
 
 // #define MICROSTEPPING
 #define STEP 20
-#define FORWARD_LIMIT_PIN    (A0)
-#define BACKWARD_LIMIT_PIN   (A1)
+#define FORWARD_LIMIT_PIN    (A4)
+#define BACKWARD_LIMIT_PIN   (A5)
 
 MS_Stepper motor(200, 1); //200 steps/rev, stepper number 1.
 bool homing = false;
