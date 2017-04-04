@@ -81,13 +81,13 @@ static void zero_cross_detect(void)
     digitalWrite(light_pin[i], LOW);       // turn off TRIAC (and AC)
     zero_cross[i] = true;
   }
-  //Serial.println("Zero Cross");
+  // Serial.println("zc");
 }
 
 // Turn on the TRIAC at the appropriate time
 static void dim_check(void)
 {
-  //Serial.println("Dim Check");
+  Serial.println("dc");
   for(int i = 0; i < num_of_bulbs; i++)
   {
     if(zero_cross[i] == true)
@@ -119,7 +119,7 @@ static void path_trace(unsigned int * p_path, unsigned int node_count, long path
 
     for (unsigned int i = 0; i < node_count; i++)
     {
-      
+
     }
 }
 
