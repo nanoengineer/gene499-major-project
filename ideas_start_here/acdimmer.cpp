@@ -110,7 +110,7 @@ void acdimmer_enable(void)
 {
   Serial.println("Dimmer Enable");
   Timer1.attachInterrupt(dim_check, freqStep);
-  attachInterrupt(0, zero_cross_detect, RISING);   // Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
+  attachInterrupt(2, zero_cross_detect, RISING);   // Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
 }
 
 
