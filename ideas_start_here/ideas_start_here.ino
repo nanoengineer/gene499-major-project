@@ -55,13 +55,13 @@ void setup()
  }
 
   acdimmer_init(NUM_OF_LIGHTS,pin);
-  acdimmer_bulb_array_set(off_array);
+  acdimmer_bulb_array_set(test_brightness);
   acdimmer_enable();
 }
 
 void loop()
 {
-  pingSensorRun();
+  //pingSensorRun();
 
 }
 
@@ -142,8 +142,6 @@ static void oneSensorCycle() { // Sensor ping cycle complete, do something with 
       Serial.println("SLEEP");
     }
   }
-
-
 }
 
 static void pingSensorRun(void)

@@ -42,6 +42,7 @@ void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins)
     light_pin[i] = p_pins[i];
   } // Set all the TRIAC pins as output
   Timer1.initialize(freqStep);                      // Initialize TimerOne library for the freq we need
+  Serial.println("Dimmer Init");
 }
 
 void acdimmer_bulb_set(unsigned int light_id, unsigned int brightness)
@@ -80,11 +81,13 @@ static void zero_cross_detect(void)
     digitalWrite(light_pin[i], LOW);       // turn off TRIAC (and AC)
     zero_cross[i] = true;
   }
+  //Serial.println("Zero Cross");
 }
 
 // Turn on the TRIAC at the appropriate time
 static void dim_check(void)
 {
+  //Serial.println("Dim Check");
   for(int i = 0; i < num_of_bulbs; i++)
   {
     if(zero_cross[i] == true)
@@ -105,6 +108,7 @@ static void dim_check(void)
 
 void acdimmer_enable(void)
 {
+  Serial.println("Dimmer Enable");
   Timer1.attachInterrupt(dim_check, freqStep);
   attachInterrupt(0, zero_cross_detect, RISING);   // Attach an Interupt to Pin 2 (interupt 0) for Zero Cross Detection
 }
