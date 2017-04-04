@@ -57,12 +57,16 @@ void setup()
   acdimmer_init(NUM_OF_LIGHTS,pin);
   acdimmer_bulb_array_set(test_brightness);
   acdimmer_enable();
+  single_state_enter(SINGLE_LEFT_STATE);
 }
 
 void loop()
 {
-  //pingSensorRun();
+  timer_run();
+  // pingSensorRun();
 
+
+  // }
 }
 
 static void pingSensorInit(void)
@@ -122,12 +126,14 @@ static void oneSensorCycle() { // Sensor ping cycle complete, do something with 
     if(left_mean <= TRIG_THRESHOLD && right_mean > TRIG_THRESHOLD)
     {
       m_current_state == SINGLE_LEFT_STATE;
+      single_state_enter(m_current_state);
       Serial.println("LEFT");
     }
 
     else if(left_mean > TRIG_THRESHOLD && right_mean <= TRIG_THRESHOLD)
     {
       m_current_state == SINGLE_RIGHT_STATE;
+      single_state_enter(m_current_state);
       Serial.println("RIGHT");
     }
 
