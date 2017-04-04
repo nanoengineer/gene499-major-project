@@ -6,8 +6,8 @@
 
 // #define MICROSTEPPING
 #define STEP 20
-#define FORWARD_LIMIT_PIN    (A4)
-#define BACKWARD_LIMIT_PIN   (A5)
+#define FORWARD_LIMIT_PIN    (A1)
+#define BACKWARD_LIMIT_PIN   (A0)
 
 MS_Stepper motor(200, 1); //200 steps/rev, stepper number 1.
 bool homing = false;
@@ -16,8 +16,8 @@ unsigned int total_steps = 0;
 void setup() {
   // Serial.begin(9600);           // set up Serial library at 9600 bps
   // Serial.println("Stepper test!");
-  pinMode(FORWARD_LIMIT_PIN, INPUT_PULLUP);
-  pinMode(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
+  digitalWrite(FORWARD_LIMIT_PIN, INPUT_PULLUP);
+  digitalWrite(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
 
   motor.setSpeed(5);  // 10 rpm
 
@@ -34,6 +34,7 @@ void setup() {
     }
 
     else if (fwd_limit_reached())
+    
     {
       total_steps = go_to_bwd_limit();
       motor.step(total_steps/2,FORWARD, INTERLEAVE);
