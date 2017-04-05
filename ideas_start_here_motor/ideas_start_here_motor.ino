@@ -23,31 +23,31 @@ void setup() {
 
   homing = true;
 
-  while(homing)
-  {
-    if(!fwd_limit_reached() && !bwd_limit_reached())
-    {
-      go_to_fwd_limit();
-      total_steps = go_to_bwd_limit();
-      motor.step(total_steps/2,FORWARD, INTERLEAVE);
-      homing = false;
-    }
-
-    else if (fwd_limit_reached())
-    
-    {
-      total_steps = go_to_bwd_limit();
-      motor.step(total_steps/2,FORWARD, INTERLEAVE);
-      homing = false;
-    }
-
-    else if (bwd_limit_reached())
-    {
-      total_steps = go_to_fwd_limit();
-      motor.step(total_steps/2, BACKWARD, INTERLEAVE);
-      homing = false;
-    }
-  }
+  // while(homing)
+  // {
+  //   if(!fwd_limit_reached() && !bwd_limit_reached())
+  //   {
+  //     go_to_fwd_limit();
+  //     total_steps = go_to_bwd_limit();
+  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  //
+  //   else if (fwd_limit_reached())
+  //
+  //   {
+  //     total_steps = go_to_bwd_limit();
+  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  //
+  //   else if (bwd_limit_reached())
+  //   {
+  //     total_steps = go_to_fwd_limit();
+  //     motor.step(total_steps/2, BACKWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  // }
 
 }
 

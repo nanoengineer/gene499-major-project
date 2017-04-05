@@ -36,6 +36,7 @@ unsigned int cm_filter_right[NUM_OF_PTS_FOR_TRIG];
 uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
 
 ish_state_t m_current_state = SLEEP_STATE;
+ish_state_t m_prev_state = DOUBLE_STATE;
 
 NewPing sonar[SONAR_NUM] = {     // Sensor object array.
   NewPing(SENSOR_L_TRIG, SENSOR_L_ECHO, SENSOR_L_MAX_DIST), // Each sensor's trigger pin, echo pin, and max distance to ping.
@@ -57,15 +58,15 @@ void setup()
   acdimmer_init(NUM_OF_LIGHTS,pin);
   acdimmer_bulb_array_set(test_brightness);
   acdimmer_enable();
-  single_state_enter(SINGLE_LEFT_STATE);
+
+  //single_state_enter(SINGLE_LEFT_STATE);
+  sleep_state_enter();
 }
 
 void loop()
 {
   timer_run();
-  // pingSensorRun();
-
-
+  //pingSensorRun();
   // }
 }
 
@@ -85,13 +86,13 @@ static void oneSensorCycle() { // Sensor ping cycle complete, do something with 
   // The following code would be replaced with your code that does something with the ping results.
   static unsigned int filter_index = 0;
 
-  for (uint8_t i = 0; i < SONAR_NUM; i++) {
-    Serial.print(i);
-    Serial.print("=");
-    Serial.print(cm[i]);
-    Serial.print("cm ");
-  }
-  Serial.println();
+  // for (uint8_t i = 0; i < SONAR_NUM; i++) {
+  //   Serial.print(i);
+  //   Serial.print("=");
+  //   Serial.print(cm[i]);
+  //   Serial.print("cm ");
+  // }
+  // Serial.println();
 
 
   cm_filter_left[filter_index] = cm[0];
@@ -116,38 +117,61 @@ static void oneSensorCycle() { // Sensor ping cycle complete, do something with 
   unsigned int left_mean = left_sum/NUM_OF_PTS_FOR_TRIG;
   unsigned int right_mean = right_sum/NUM_OF_PTS_FOR_TRIG;
 
-  Serial.print("Left Mean:");
-  Serial.println(left_mean);
-  Serial.print("Right Mean:");
-  Serial.println(right_mean);
+  // Serial.print("Left Mean:");
+  // Serial.println(left_mean);
+  // Serial.print("Right Mean:");
+  // Serial.println(right_mean);
 
-  if (true)
-  {
     if(left_mean <= TRIG_THRESHOLD && right_mean > TRIG_THRESHOLD)
     {
-      m_current_state == SINGLE_LEFT_STATE;
-      single_state_enter(m_current_state);
+      m_current_state = SINGLE_LEFT_STATE;
+      // single_state_enter(m_current_state);
       Serial.println("LEFT");
     }
 
     else if(left_mean > TRIG_THRESHOLD && right_mean <= TRIG_THRESHOLD)
     {
-      m_current_state == SINGLE_RIGHT_STATE;
-      single_state_enter(m_current_state);
+      m_current_state = SINGLE_RIGHT_STATE;
+      // single_state_enter(m_current_state);
       Serial.println("RIGHT");
     }
 
     else if(left_mean <= TRIG_THRESHOLD && right_mean <= TRIG_THRESHOLD)
     {
-      m_current_state == DOUBLE_STATE;
+      m_current_state = DOUBLE_STATE;
+      // double_state_enter();
       Serial.println("DOUBLE");
     }
     else
     {
-      m_current_state == SLEEP_STATE;
+      m_current_state = SLEEP_STATE;
+      // sleep_state_enter();
       Serial.println("SLEEP");
     }
-  }
+
+    if (m_prev_state != m_current_state)
+    {
+      if (m_current_state == SINGLE_LEFT_STATE)
+      {
+        single_state_enter(SINGLE_LEFT_STATE);
+      }
+      else if (m_current_state == SINGLE_RIGHT_STATE)
+      {
+        single_state_enter(SINGLE_RIGHT_STATE);
+      }
+      else if (m_current_state == SLEEP_STATE)
+      {
+        sleep_state_enter();
+      }
+      else if (m_current_state == DOUBLE_STATE)
+      {
+        double_state_enter();
+      }
+    }
+
+    m_prev_state = m_current_state;
+
+
 }
 
 static void pingSensorRun(void)

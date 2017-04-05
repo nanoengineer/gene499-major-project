@@ -13,6 +13,10 @@
 #define SINGLE_STATE_INIT_BRIGHTNESS (50)
 #define DOUBLE_STATE_INIT_BRIGHTNESS (50)
 
+#define SLEEP_STATE_MAX_BRIGHTNESS (80)
+#define SLEEP_STATE_MIN_BRIGHTNESS (80)
+#define SLEEP_STATE_INTERVAL_MS    (30)
+
 static unsigned int light_pin[MAX_LIGHT_NUM] = {0};
 static volatile unsigned int dim_counter[MAX_LIGHT_NUM] = {0};               // Variable to use as a counter
 static unsigned int dim_level[MAX_LIGHT_NUM] = {0};
@@ -52,34 +56,37 @@ void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins)
   Serial.println("Dimmer Init");
 }
 
-void acdimmer_bulb_set(unsigned int light_id, unsigned int brightness)
+static unsigned int convert_brightness_to_dim(unsigned int brightness)
 {
+    unsigned int dim_level = 0;
+
     if(brightness <= 128 && brightness >= OFF_VAL)
     {
-      dim_level[light_id] = MAX_DIM_LEVEL - brightness;
+      dim_level = MAX_DIM_LEVEL - brightness;
     }
     else if (brightness < OFF_VAL)
     {
-      dim_level[light_id] = MAX_DIM_LEVEL-OFF_VAL;
+      dim_level = MAX_DIM_LEVEL-OFF_VAL;
     }
-    else if (brightness > 128)
+    else
     {
-      dim_level[light_id] = 0;
+      dim_level = 0;
     }
+
+    return dim_level;
+}
+
+void acdimmer_bulb_set(unsigned int light_id, unsigned int brightness)
+{
+
+      dim_level[light_id] = convert_brightness_to_dim(brightness);
 }
 
 void acdimmer_bulb_array_set(unsigned int * p_brightness)
 {
     for (int i = 0; i < num_of_bulbs; i++)
     {
-          if(p_brightness[i] <= 128 && p_brightness[i] >= OFF_VAL)
-          {
-            dim_level[i] = MAX_DIM_LEVEL - p_brightness[i];
-          }
-          else if (p_brightness[i] < OFF_VAL)
-          {
-            dim_level[i] = OFF_VAL;
-          }
+        dim_level[i] = convert_brightness_to_dim(p_brightness[i]);
     }
 }
 
@@ -87,14 +94,7 @@ void acdimmer_bulb_all_set(unsigned int brightness)
 {
     for (int i = 0; i < num_of_bulbs; i++)
     {
-          if(brightness <= 128 && brightness >= OFF_VAL)
-          {
-            dim_level[i] = MAX_DIM_LEVEL - brightness;
-          }
-          else if (brightness < OFF_VAL)
-          {
-            dim_level[i] = OFF_VAL;
-          }
+      dim_level[i] = convert_brightness_to_dim(brightness);
     }
 }
 
@@ -140,19 +140,14 @@ void acdimmer_enable(void)
 }
 
 
-static void path_trace(unsigned int * p_path, unsigned int node_count, long path_time)
-{
-
-    for (unsigned int i = 0; i < node_count; i++)
-    {
-
-    }
-}
-
-void sleep_state_enter (void)
-{
-  m_current_state = SLEEP_STATE;
-}
+// static void path_trace(unsigned int * p_path, unsigned int node_count, long path_time)
+// {
+//
+//     for (unsigned int i = 0; i < node_count; i++)
+//     {
+//
+//     }
+// }
 
 static void left_state_cb(void)
 {
@@ -166,7 +161,7 @@ static void left_state_cb(void)
   //Serial.println(step_index);
   for (unsigned int i = 0; i < step_index; i++)
   {
-    Serial.println(head_index);
+    //Serial.println(head_index);
     if (i == (head_index))
     {
       acdimmer_bulb_set(order_array[i], head_brightness);
@@ -199,7 +194,7 @@ static void right_state_cb(void)
   //Serial.println(step_index);
   for (unsigned int i = 0; i < step_index; i++)
   {
-    Serial.println(head_index);
+    //Serial.println(head_index);
     if (i == (head_index))
     {
       acdimmer_bulb_set(order_array[i], head_brightness);
@@ -209,7 +204,6 @@ static void right_state_cb(void)
       acdimmer_bulb_set(order_array[i], (head_brightness - 15*(head_index-i)));
     }
   }
-
   step_index++;
 
   if (step_index == 13)
@@ -220,9 +214,36 @@ static void right_state_cb(void)
   // }
 }
 
+void double_state_cb(void)
+{
+  static unsigned int level = 20;
+  static int inc = 1;
+
+  level+=inc;
+  if((level>=128) || (level<=20))
+    inc*=-1;
+
+  acdimmer_bulb_all_set(level);
+}
+
+void sleep_state_cb(void)
+{
+  static unsigned int level = 20;
+  static int inc = 1;
+
+  level+=inc;
+
+  if((level>=80) || (level<=20))
+    inc*=-1;
+
+  acdimmer_bulb_all_set(level);
+}
+
 
 void single_state_enter( ish_state_t state )
 {
+  // timer.disable(generalTimerId);
+
   if (state == SINGLE_LEFT_STATE)
   {
       m_current_state = SINGLE_LEFT_STATE;
@@ -237,11 +258,6 @@ void single_state_enter( ish_state_t state )
       acdimmer_bulb_all_set(SINGLE_STATE_INIT_BRIGHTNESS);
       generalTimerId = timer.setInterval(SINGLE_STATE_TIME_STEP, right_state_cb);
   }
-  else if (state == DOUBLE_STATE)
-  {
-      m_current_state = DOUBLE_STATE;
-      acdimmer_bulb_all_set(DOUBLE_STATE_INIT_BRIGHTNESS);
-  }
 }
 
 void timer_run(void)
@@ -251,5 +267,16 @@ void timer_run(void)
 
 void double_state_enter(void)
 {
+  // timer.disable(generalTimerId);
+  m_current_state = DOUBLE_STATE;
+  acdimmer_bulb_all_set(DOUBLE_STATE_INIT_BRIGHTNESS);
 
+  generalTimerId = timer.setInterval(50, double_state_cb);
+}
+
+void sleep_state_enter (void)
+{
+  // timer.disable(generalTimerId);
+  m_current_state = SLEEP_STATE;
+  generalTimerId = timer.setInterval(50, sleep_state_cb);
 }
