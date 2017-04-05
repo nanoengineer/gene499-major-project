@@ -19,35 +19,37 @@ void setup() {
   digitalWrite(FORWARD_LIMIT_PIN, INPUT_PULLUP);
   digitalWrite(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
 
-  motor.setSpeed(5);  // 10 rpm
+  motor.setSpeed(3);  // 10 rpm
 
   homing = true;
 
-  // while(homing)
-  // {
-  //   if(!fwd_limit_reached() && !bwd_limit_reached())
-  //   {
-  //     go_to_fwd_limit();
-  //     total_steps = go_to_bwd_limit();
-  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  //
-  //   else if (fwd_limit_reached())
-  //
-  //   {
-  //     total_steps = go_to_bwd_limit();
-  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  //
-  //   else if (bwd_limit_reached())
-  //   {
-  //     total_steps = go_to_fwd_limit();
-  //     motor.step(total_steps/2, BACKWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  // }
+  while(homing)
+  {
+    if(!fwd_limit_reached() && !bwd_limit_reached())
+    {
+      go_to_fwd_limit();
+      total_steps = go_to_bwd_limit();
+      motor.step(total_steps/2,FORWARD, DOUBLE);
+      homing = false;
+    }
+
+    else if (fwd_limit_reached())
+
+    {
+      total_steps = go_to_bwd_limit();
+      motor.step(total_steps/2,FORWARD, DOUBLE);
+      homing = false;
+    }
+
+    else if (bwd_limit_reached())
+    {
+      total_steps = go_to_fwd_limit();
+      motor.step(total_steps/2, BACKWARD, DOUBLE);
+      homing = false;
+    }
+  }
+
+  motor.release();
 
 }
 
