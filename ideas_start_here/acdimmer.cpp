@@ -16,7 +16,7 @@
 #define SLEEP_STATE_MAX_BRIGHTNESS       (80)
 #define SLEEP_STATE_MIN_BRIGHTNESS       (20)
 #define SLEEP_STATE_BRIGHTNESS_DELTA     (SLEEP_STATE_MAX_BRIGHTNESS-SLEEP_STATE_MIN_BRIGHTNESS)
-#define SLEEP_STATE_BRIGHTNESS_OFFSET    (SLEEP_STATE_BRIGHTNESS_DELTA/4)
+#define SLEEP_STATE_BRIGHTNESS_OFFSET    (SLEEP_STATE_BRIGHTNESS_DELTA/6)
 
 #define SLEEP_STATE_INC_INTERVAL_MS      (30)
 #define SLEEP_STATE_BRIGHTNESS_INC       (1)  //inc brightness by 1 every interval_ms
@@ -246,6 +246,8 @@ static void sleep_state_cb(void)
   static unsigned int x_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
   static unsigned int y_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
   static unsigned int z_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  static unsigned int a_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  static unsigned int b_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
 
   // static bulb_state_t w_state = IDLE;
   // static bulb_state_t x_state = IDLE;
@@ -256,6 +258,8 @@ static void sleep_state_cb(void)
   static int x_inc = 0;
   static int y_inc = 0;
   static int z_inc = 0;
+  static int a_inc = 0;
+  static int b_inc = 0;
 
   static unsigned int step_index = 0;
 
@@ -313,39 +317,69 @@ static void sleep_state_cb(void)
     z_inc = 0;
   }
 
+  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET)
+  {
+    a_inc = 1;
+  }
+  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+  {
+    a_inc = -1;
+  }
+  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+  {
+    a_inc = 0;
+  }
+
+  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET)
+  {
+    b_inc = 1;
+  }
+  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+  {
+    b_inc = -1;
+  }
+  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+  {
+    b_inc = 0;
+  }
+
   //Increment all the brightness levels
   w_level += w_inc;
   x_level += x_inc;
   y_level += y_inc;
   z_level += z_inc;
+  a_level += a_inc;
+  b_level += b_inc;
 
-  Serial.println(w_level);
-  Serial.println(x_level);
-  Serial.println(y_level);
-  Serial.println(z_level);
-  Serial.println(".");
+  // Serial.println(w_level);
+  // Serial.println(x_level);
+  // Serial.println(y_level);
+  // Serial.println(z_level);
+  // Serial.println(".");
 
   //Head
-  acdimmer_bulb_set(0,w_level);
   acdimmer_bulb_set(7,w_level);
   acdimmer_bulb_set(1,w_level);
-  acdimmer_bulb_set(6,w_level);
 
-  acdimmer_bulb_set(9,x_level);
-  acdimmer_bulb_set(8,x_level);
+  acdimmer_bulb_set(0,x_level);
+  acdimmer_bulb_set(6,x_level);
 
-  acdimmer_bulb_set(3,y_level);
-  acdimmer_bulb_set(11,y_level);
-  acdimmer_bulb_set(5,y_level);
-  acdimmer_bulb_set(4,y_level);
+  acdimmer_bulb_set(9,y_level);
+  acdimmer_bulb_set(8,y_level);
 
-  acdimmer_bulb_set(10,z_level);
-  acdimmer_bulb_set(2,z_level);
+  acdimmer_bulb_set(3,z_level);
+  acdimmer_bulb_set(11,z_level);
+
+  acdimmer_bulb_set(5,a_level);
+  acdimmer_bulb_set(4,a_level);
+
+  acdimmer_bulb_set(10,b_level);
+  acdimmer_bulb_set(2,b_level);
 
   step_index++;
 
   //everything's done, go back to beginning
-  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET+2*halfway_pt+2)
+  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET+2*halfway_pt+2)
   {
     step_index = 0;
     w_level = SLEEP_STATE_MIN_BRIGHTNESS;
