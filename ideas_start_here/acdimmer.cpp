@@ -13,9 +13,15 @@
 #define SINGLE_STATE_INIT_BRIGHTNESS (50)
 #define DOUBLE_STATE_INIT_BRIGHTNESS (50)
 
-#define SLEEP_STATE_MAX_BRIGHTNESS (80)
-#define SLEEP_STATE_MIN_BRIGHTNESS (80)
-#define SLEEP_STATE_INTERVAL_MS    (30)
+#define SLEEP_STATE_MAX_BRIGHTNESS       (80)
+#define SLEEP_STATE_MIN_BRIGHTNESS       (20)
+#define SLEEP_STATE_BRIGHTNESS_DELTA     (SLEEP_STATE_MAX_BRIGHTNESS-SLEEP_STATE_MIN_BRIGHTNESS)
+#define SLEEP_STATE_BRIGHTNESS_OFFSET    (SLEEP_STATE_BRIGHTNESS_DELTA/4)
+
+#define SLEEP_STATE_INC_INTERVAL_MS      (30)
+#define SLEEP_STATE_BRIGHTNESS_INC       (1)  //inc brightness by 1 every interval_ms
+
+#define SLEEP_STATE_PERIOD_MS            (SLEEP_STATE_INC_INTERVAL_MS*(7+1)) //(7 + x), x being how much idle time
 
 static unsigned int light_pin[MAX_LIGHT_NUM] = {0};
 static volatile unsigned int dim_counter[MAX_LIGHT_NUM] = {0};               // Variable to use as a counter
@@ -54,6 +60,8 @@ void acdimmer_init(unsigned int num_of_lights, unsigned int * p_pins)
   } // Set all the TRIAC pins as output
   Timer1.initialize(freqStep);                      // Initialize TimerOne library for the freq we need
   Serial.println("Dimmer Init");
+
+
 }
 
 static unsigned int convert_brightness_to_dim(unsigned int brightness)
@@ -66,7 +74,7 @@ static unsigned int convert_brightness_to_dim(unsigned int brightness)
     }
     else if (brightness < OFF_VAL)
     {
-      dim_level = MAX_DIM_LEVEL-OFF_VAL;
+      dim_level = MAX_DIM_LEVEL - OFF_VAL;
     }
     else
     {
@@ -226,17 +234,126 @@ void double_state_cb(void)
   acdimmer_bulb_all_set(level);
 }
 
-void sleep_state_cb(void)
+static void sleep_state_cb(void)
 {
-  static unsigned int level = 20;
-  static int inc = 1;
+  //Length wise there are 8 rows of symmetric bulbs
+  //o--o--o--o--o--o--o--o
+  //w  x  y  z  z  y  x  w
 
-  level+=inc;
+  static unsigned int time_ms = 0;
 
-  if((level>=80) || (level<=20))
-    inc*=-1;
+  static unsigned int w_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  static unsigned int x_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  static unsigned int y_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  static unsigned int z_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
 
-  acdimmer_bulb_all_set(level);
+  // static bulb_state_t w_state = IDLE;
+  // static bulb_state_t x_state = IDLE;
+  // static bulb_state_t y_state = IDLE;
+  // static bulb_state_t z_state = IDLE;
+
+  static int w_inc = 0;
+  static int x_inc = 0;
+  static int y_inc = 0;
+  static int z_inc = 0;
+
+  static unsigned int step_index = 0;
+
+  //---------------------------------
+
+  const unsigned int halfway_pt = (SLEEP_STATE_BRIGHTNESS_DELTA);
+
+
+  if (step_index == 0)
+  {
+    w_inc = 1;
+  }
+  if (step_index == (halfway_pt+1))
+  {
+    w_inc = -1;
+  }
+  if (step_index == 2*halfway_pt+1)
+  {
+    w_inc = 0;
+  }
+  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET)
+  {
+    x_inc = 1;
+  }
+  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+  {
+    x_inc = -1;
+  }
+  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+  {
+    x_inc = 0;
+  }
+  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET)
+  {
+    y_inc = 1;
+  }
+  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+  {
+    y_inc = -1;
+  }
+  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+  {
+    y_inc = 0;
+  }
+  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET)
+  {
+    z_inc = 1;
+  }
+  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+  {
+    z_inc = -1;
+  }
+  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+  {
+    z_inc = 0;
+  }
+
+  //Increment all the brightness levels
+  w_level += w_inc;
+  x_level += x_inc;
+  y_level += y_inc;
+  z_level += z_inc;
+
+  Serial.println(w_level);
+  Serial.println(x_level);
+  Serial.println(y_level);
+  Serial.println(z_level);
+  Serial.println(".");
+
+  //Head
+  acdimmer_bulb_set(0,w_level);
+  acdimmer_bulb_set(7,w_level);
+  acdimmer_bulb_set(1,w_level);
+  acdimmer_bulb_set(6,w_level);
+
+  acdimmer_bulb_set(9,x_level);
+  acdimmer_bulb_set(8,x_level);
+
+  acdimmer_bulb_set(3,y_level);
+  acdimmer_bulb_set(11,y_level);
+  acdimmer_bulb_set(5,y_level);
+  acdimmer_bulb_set(4,y_level);
+
+  acdimmer_bulb_set(10,z_level);
+  acdimmer_bulb_set(2,z_level);
+
+  step_index++;
+
+  //everything's done, go back to beginning
+  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET+2*halfway_pt+2)
+  {
+    step_index = 0;
+    w_level = SLEEP_STATE_MIN_BRIGHTNESS;
+    x_level = SLEEP_STATE_MIN_BRIGHTNESS;
+    y_level = SLEEP_STATE_MIN_BRIGHTNESS;
+    z_level = SLEEP_STATE_MIN_BRIGHTNESS;
+  }
+
 }
 
 
@@ -278,5 +395,6 @@ void sleep_state_enter (void)
 {
   // timer.disable(generalTimerId);
   m_current_state = SLEEP_STATE;
-  generalTimerId = timer.setInterval(50, sleep_state_cb);
+  acdimmer_bulb_all_set(SLEEP_STATE_MIN_BRIGHTNESS);
+  generalTimerId = timer.setInterval(SLEEP_STATE_INC_INTERVAL_MS, sleep_state_cb);
 }
