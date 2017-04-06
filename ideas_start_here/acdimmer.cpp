@@ -472,6 +472,7 @@ static void motor_ctrl_bwd(void)
     activeSequenceCount = 0;
     digitalWrite(STOP_PIN, LOW);
     generalTimerId = timer.setInterval(STABLE_ACTIVE_INC_INTERVAL_MS, stable_active_state_cb);
+    timer.setTimeout(20000, sleep_state_enter);
   }
 }
 
@@ -489,6 +490,7 @@ static void motor_ctrl_fwd(void)
     activeSequenceCount = 0;
     digitalWrite(STOP_PIN, LOW);
     generalTimerId = timer.setInterval(STABLE_ACTIVE_INC_INTERVAL_MS, stable_active_state_cb);
+    timer.setTimeout(20000, sleep_state_enter);
   }
 }
 
