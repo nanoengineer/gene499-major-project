@@ -37,6 +37,8 @@
 #define ACTIVE_STATE_NUM_OF_TILT          (5)
 
 
+
+
 static unsigned int light_pin[MAX_LIGHT_NUM] = {0};
 static volatile unsigned int dim_counter[MAX_LIGHT_NUM] = {0};               // Variable to use as a counter
 static unsigned int dim_level[MAX_LIGHT_NUM] = {0};
@@ -219,46 +221,72 @@ void acdimmer_enable(void)
 static void active_state_cb(void)
 {
     static unsigned int step_index = 0;
+    static unsigned int tilt_index = 0;
+    static unsigned int call_counter = 0;
+
+    call_counter++;
 
     //---------------------------------
-
     const unsigned int halfway_pt = (ACTIVE_STATE_BRIGHTNESS_DELTA);
 
-    int pin_nums[MAX_LIGHT_NUM] = {0,7,9,11,4,2,10,5,3,8,1,6};
+    int bwd_pin_nums[MAX_LIGHT_NUM] = {0,7,9,11,4,2,10,5,3,8,1,6};
+    int fwd_pin_nums[MAX_LIGHT_NUM] = {6,1,8,3,5,10,2,4,11,9,7,0};
+
 
     for(int i = 0; i < MAX_LIGHT_NUM; i++)
     {
-      if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET)
+      if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET/2)
       {
         *(inc_array[i]) = 1;
       }
-      else if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+      else if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET/2 + halfway_pt+1)
       {
         *(inc_array[i]) = -1;
       }
-      else if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+      else if (step_index == i*ACTIVE_STATE_BRIGHTNESS_OFFSET/2 + 2*halfway_pt+1)
       {
         *(inc_array[i]) = 0;
       }
 
       *(level_array[i]) += *(inc_array[i]);
 
-      acdimmer_bulb_set(pin_nums[i],*(level_array[i]));
+      if(tilt_index%2)
+      {
+        acdimmer_bulb_set(bwd_pin_nums[i],*(level_array[i]));
+      }
+      else
+      {
+        acdimmer_bulb_set(fwd_pin_nums[i],*(level_array[i]));
+      }
     }
 
-    //Head
     //{5000, 9000, 6000, 3000, 1000}
-    //20 ms per step
+    //15 ms per step
 
     step_index++;
+    if (step_index == 11*ACTIVE_STATE_BRIGHTNESS_OFFSET/2 + 2*halfway_pt+2)
+    {
+      Serial.println(step_index);
+    }
 
-    //everything's done, go back to beginning
-    if (step_index == 11*SLEEP_STATE_BRIGHTNESS_OFFSET+2*halfway_pt+2)
+    //everything's done, go to next tilt
+
+    if (step_index == 267)
     {
       step_index = 0;
       for(int i = 0; i < MAX_LIGHT_NUM; i++)
       {
         *(level_array[i]) = ACTIVE_STATE_INIT_BRIGHTNESS;
+      }
+
+      tilt_index++;
+
+
+      if(tilt_index < ACTIVE_STATE_NUM_OF_TILT+1)
+      {
+        generalTimerId = timer.setTimer(activeSequenceTiming[tilt_index]/267,
+                                        active_state_cb,
+                                        267);
       }
     }
   // }
@@ -275,88 +303,24 @@ static void sleep_state_cb(void)
   const unsigned int halfway_pt = (SLEEP_STATE_BRIGHTNESS_DELTA);
 
 
-  if (step_index == 0)
-  {
-    w_inc = 1;
-  }
-  if (step_index == (halfway_pt+1))
-  {
-    w_inc = -1;
-  }
-  if (step_index == 2*halfway_pt+1)
-  {
-    w_inc = 0;
-  }
-  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET)
-  {
-    x_inc = 1;
-  }
-  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
-  {
-    x_inc = -1;
-  }
-  if (step_index == SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
-  {
-    x_inc = 0;
-  }
-  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET)
-  {
-    y_inc = 1;
-  }
-  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
-  {
-    y_inc = -1;
-  }
-  if (step_index == 2*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
-  {
-    y_inc = 0;
-  }
-  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET)
-  {
-    z_inc = 1;
-  }
-  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
-  {
-    z_inc = -1;
-  }
-  if (step_index == 3*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
-  {
-    z_inc = 0;
-  }
 
-  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET)
+  for(int i = 0; i < 6; i++)
   {
-    a_inc = 1;
-  }
-  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
-  {
-    a_inc = -1;
-  }
-  if (step_index == 4*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
-  {
-    a_inc = 0;
-  }
+    if (step_index == i*SLEEP_STATE_BRIGHTNESS_OFFSET)
+    {
+      *(inc_array[i]) = 1;
+    }
+    else if (step_index == i*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
+    {
+      *(inc_array[i]) = -1;
+    }
+    else if (step_index == i*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+    {
+      *(inc_array[i]) = 0;
+    }
 
-  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET)
-  {
-    b_inc = 1;
+    *(level_array[i]) += *(inc_array[i]);
   }
-  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET + halfway_pt+1)
-  {
-    b_inc = -1;
-  }
-  if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
-  {
-    b_inc = 0;
-  }
-
-  //Increment all the brightness levels
-  w_level += w_inc;
-  x_level += x_inc;
-  y_level += y_inc;
-  z_level += z_inc;
-  a_level += a_inc;
-  b_level += b_inc;
 
   //Head
   acdimmer_bulb_set(7,w_level);
@@ -383,12 +347,10 @@ static void sleep_state_cb(void)
   if (step_index == 5*SLEEP_STATE_BRIGHTNESS_OFFSET+2*halfway_pt+2 + 10)
   {
     step_index = 0;
-    w_level = SLEEP_STATE_MIN_BRIGHTNESS;
-    x_level = SLEEP_STATE_MIN_BRIGHTNESS;
-    y_level = SLEEP_STATE_MIN_BRIGHTNESS;
-    z_level = SLEEP_STATE_MIN_BRIGHTNESS;
-    a_level = SLEEP_STATE_MIN_BRIGHTNESS;
-    b_level = SLEEP_STATE_MIN_BRIGHTNESS;
+    for(int i = 0; i < 6; i++)
+    {
+      *(level_array[i]) = SLEEP_STATE_MIN_BRIGHTNESS;
+    }
   }
 
 }
@@ -480,7 +442,7 @@ void active_state_enter(void)
   digitalWrite(ACTIVATION_PIN, LOW);
   acdimmer_bulb_all_set(ACTIVE_STATE_INIT_BRIGHTNESS);
   motor_ctrl_fwd();
-  generalTimerId = timer.setInterval(ACTIVE_STATE_INC_INTERVAL_MS, active_state_cb);
+  generalTimerId = timer.setTimer(activeSequenceTiming[0]/267, active_state_cb, 267);
 }
 
 void sleep_state_enter (void)

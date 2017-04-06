@@ -57,7 +57,7 @@ void setup()
   acdimmer_init(NUM_OF_LIGHTS,pin);
   acdimmer_enable();
   sleep_state_enter();
-  m_timer.setTimeout(20000, active_state_enter);
+  m_timer.setTimeout(22000, active_state_enter);
 }
 
 void loop()
