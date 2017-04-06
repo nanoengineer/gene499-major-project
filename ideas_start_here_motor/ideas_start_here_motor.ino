@@ -3,77 +3,120 @@
 // this code is public domain, enjoy!
 
 #include <MSMotorShield.h>
-
+#include "ish_states.h"
 // #define MICROSTEPPING
 #define STEP 20
 #define FORWARD_LIMIT_PIN    (A1)
 #define BACKWARD_LIMIT_PIN   (A0)
 
+#define ACTIVATION_PIN       (A2)
+#define SLEEP_PIN            (A3)
+#define STOP_PIN             (A4)
+
 MS_Stepper motor(200, 1); //200 steps/rev, stepper number 1.
 bool homing = false;
 unsigned int total_steps = 0;
+int step_position = 0;
+
+ish_state_t m_current_state = SLEEP_STATE;
 
 void setup() {
-  // Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(9600);           // set up Serial library at 9600 bps
   // Serial.println("Stepper test!");
   digitalWrite(FORWARD_LIMIT_PIN, INPUT_PULLUP);
   digitalWrite(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
 
-  motor.setSpeed(3);  // 10 rpm
+  motor.setSpeed(2);  // 10 rpm
 
-  homing = true;
-
-  while(homing)
-  {
-    if(!fwd_limit_reached() && !bwd_limit_reached())
-    {
-      go_to_fwd_limit();
-      total_steps = go_to_bwd_limit();
-      motor.step(total_steps/2,FORWARD, DOUBLE);
-      homing = false;
-    }
-
-    else if (fwd_limit_reached())
-
-    {
-      total_steps = go_to_bwd_limit();
-      motor.step(total_steps/2,FORWARD, DOUBLE);
-      homing = false;
-    }
-
-    else if (bwd_limit_reached())
-    {
-      total_steps = go_to_fwd_limit();
-      motor.step(total_steps/2, BACKWARD, DOUBLE);
-      homing = false;
-    }
-  }
-
-  motor.release();
-
+  // homing = true;
+  //
+  // while(homing)
+  // {
+  //   if(!fwd_limit_reached() && !bwd_limit_reached())
+  //   {
+  //     go_to_fwd_limit();
+  //     total_steps = go_to_bwd_limit();
+  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  //
+  //   else if (fwd_limit_reached())
+  //   {
+  //     total_steps = go_to_bwd_limit();
+  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  //
+  //   else if (bwd_limit_reached())
+  //   {
+  //     total_steps = go_to_fwd_limit();
+  //     motor.step(total_steps/2, BACKWARD, INTERLEAVE);
+  //     homing = false;
+  //   }
+  // }
+  // step_position = 0;
+  // motor.release();
 }
 
-void loop() {
+void loop()
+{
+  if(digitalRead(ACTIVATION_PIN) == LOW && digitalRead(STOP_PIN) == HIGH)
+  {
+    active_state_enter();
+  }
+  if(digitalRead(SLEEP_PIN) == LOW && digitalRead(STOP_PIN) == HIGH)
+  {
+    sleep_state_enter();
+  }
+  if(digitalRead(STOP_PIN) == LOW)
+  {
+    motor.release();
+    Serial.println("STOP");
+  }
+}
 
+void active_state_enter(void)
+{
+  Serial.println("Active State");
+  m_current_state = ACTIVE_STATE;
 
-//  Serial.println("Single coil steps");
-//  motor.step(5, FORWARD, SINGLE);
-//  motor.step(5, BACKWARD, SINGLE);
-////
-//  Serial.println("Double coil steps");
-//  motor.step(5, FORWARD, DOUBLE);
-//  motor.step(5, BACKWARD, DOUBLE);
+  while((digitalRead(STOP_PIN) == HIGH) && (digitalRead(SLEEP_PIN) == HIGH))//
+  {
+    while((digitalRead(ACTIVATION_PIN) == LOW) && (!fwd_limit_reached()) && (digitalRead(STOP_PIN) == HIGH))
+    {
+      Serial.println("Active Fwd");
+      motor.step(1,FORWARD, INTERLEAVE);
+      step_position++;
+    }
+    while((digitalRead(ACTIVATION_PIN) == HIGH) && (!bwd_limit_reached()) && (digitalRead(STOP_PIN) == HIGH))
+    {
+      Serial.println("Active Bwd");
+      motor.step(1,BACKWARD, INTERLEAVE);
+      step_position--;
+    }
+  }
+}
 
-  // Serial.println("Interleave coil steps");
-  // motor.step(STEP/2, FORWARD, INTERLEAVE);
-  // motor.step(STEP, BACKWARD, INTERLEAVE);
-  // motor.step(STEP/2, FORWARD, INTERLEAVE);
+void sleep_state_enter(void)
+{
+  Serial.println("Sleep State");
+  m_current_state = SLEEP_STATE;
 
-//#ifdef MICROSTEPPING
-//  Serial.println("Micrsostep steps");
-//  motor.step(10, FORWARD, MICROSTEP);
-//  motor.step(10, BACKWARD, MICROSTEP);
-//#endif
+  while((step_position != 0) && digitalRead(STOP_PIN) == HIGH)
+  {
+    if (step_position > 0)
+    {
+      Serial.println("Sleep Bwd");
+      motor.step(1, BACKWARD, INTERLEAVE);
+      step_position--;
+    }
+    else if (step_position < 0)
+    {
+      Serial.println("Sleep Fwd");
+      motor.step(1, FORWARD, INTERLEAVE);
+      step_position++;
+    }
+  }
 }
 
 bool fwd_limit_reached(void)
