@@ -513,3 +513,8 @@ void sleep_state_enter (void)
   acdimmer_bulb_all_set(SLEEP_STATE_MIN_BRIGHTNESS);
   generalTimerId = timer.setInterval(SLEEP_STATE_INC_INTERVAL_MS, sleep_state_cb);
 }
+
+ish_state_t state_get(void)
+{
+  return m_current_state;
+}

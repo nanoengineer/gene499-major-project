@@ -21,4 +21,6 @@ void active_state_enter(void);
 
 void bulb_timer_run(void);
 
+ish_state_t state_get(void);
+
 #endif //__ACDIMMER_H_
