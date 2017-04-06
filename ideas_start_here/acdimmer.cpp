@@ -6,9 +6,9 @@
 
 
 
-#define ACTIVATION_PIN       (A2)
-#define SLEEP_PIN            (A3)
-#define STOP_PIN             (A4)
+#define ACTIVATION_PIN       (11)
+#define SLEEP_PIN            (10)
+#define STOP_PIN             (9)
 
 //-----------------------------------------------------------------------------------
 #define MAX_LIGHT_NUM (12)
