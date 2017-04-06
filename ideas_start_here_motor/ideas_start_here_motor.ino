@@ -21,54 +21,54 @@ int step_position = 0;
 ish_state_t m_current_state = SLEEP_STATE;
 
 void setup() {
-  Serial.begin(9600);           // set up Serial library at 9600 bps
+  Serial.begin(112500);           // set up Serial library at 9600 bps
   // Serial.println("Stepper test!");
   digitalWrite(FORWARD_LIMIT_PIN, INPUT_PULLUP);
   digitalWrite(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
 
   motor.setSpeed(2);  // 10 rpm
 
-  // homing = true;
-  //
-  // while(homing)
-  // {
-  //   if(!fwd_limit_reached() && !bwd_limit_reached())
-  //   {
-  //     go_to_fwd_limit();
-  //     total_steps = go_to_bwd_limit();
-  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  //
-  //   else if (fwd_limit_reached())
-  //   {
-  //     total_steps = go_to_bwd_limit();
-  //     motor.step(total_steps/2,FORWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  //
-  //   else if (bwd_limit_reached())
-  //   {
-  //     total_steps = go_to_fwd_limit();
-  //     motor.step(total_steps/2, BACKWARD, INTERLEAVE);
-  //     homing = false;
-  //   }
-  // }
-  // step_position = 0;
-  // motor.release();
+  homing = true;
+
+  while(homing)
+  {
+    if(!fwd_limit_reached() && !bwd_limit_reached())
+    {
+      go_to_fwd_limit();
+      total_steps = go_to_bwd_limit();
+      motor.step(total_steps/2,FORWARD, INTERLEAVE);
+      homing = false;
+    }
+
+    else if (fwd_limit_reached())
+    {
+      total_steps = go_to_bwd_limit();
+      motor.step(total_steps/2,FORWARD, INTERLEAVE);
+      homing = false;
+    }
+
+    else if (bwd_limit_reached())
+    {
+      total_steps = go_to_fwd_limit();
+      motor.step(total_steps/2, BACKWARD, INTERLEAVE);
+      homing = false;
+    }
+  }
+  step_position = 0;
+  motor.release();
 }
 
 void loop()
 {
-  if(digitalRead(ACTIVATION_PIN) == LOW && digitalRead(STOP_PIN) == HIGH)
+  if((digitalRead(ACTIVATION_PIN) == LOW) && (digitalRead(STOP_PIN) == HIGH))
   {
     active_state_enter();
   }
-  if(digitalRead(SLEEP_PIN) == LOW && digitalRead(STOP_PIN) == HIGH)
+  if((digitalRead(SLEEP_PIN) == LOW) && (digitalRead(STOP_PIN) == HIGH))
   {
     sleep_state_enter();
   }
-  if(digitalRead(STOP_PIN) == LOW)
+  if((digitalRead(STOP_PIN) == LOW))
   {
     motor.release();
     Serial.println("STOP");

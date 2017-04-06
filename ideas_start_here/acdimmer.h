@@ -17,12 +17,8 @@ void acdimmer_enable(void);
 
 void sleep_state_enter(void);
 
-void single_state_enter(ish_state_t state);
+void active_state_enter(void);
 
-void sleep_state_enter(void);
-
-void double_state_enter(void);
-
-void timer_run(void);
+void bulb_timer_run(void);
 
 #endif //__ACDIMMER_H_
