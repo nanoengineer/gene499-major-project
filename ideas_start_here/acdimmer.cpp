@@ -19,9 +19,8 @@
 #define SLEEP_STATE_MIN_BRIGHTNESS       (10)
 #define SLEEP_STATE_BRIGHTNESS_DELTA     (SLEEP_STATE_MAX_BRIGHTNESS-SLEEP_STATE_MIN_BRIGHTNESS)
 #define SLEEP_STATE_BRIGHTNESS_OFFSET    (SLEEP_STATE_BRIGHTNESS_DELTA/6)
-
 #define SLEEP_STATE_INC_INTERVAL_MS      (30)
-#define SLEEP_STATE_BRIGHTNESS_INC       (1)  //inc brightness by 1 every interval_ms
+
 
 #define ACTIVE_STATE_MAX_BRIGHTNESS      (120)
 #define ACTIVE_STATE_MIN_BRIGHTNESS      (12)
@@ -32,7 +31,13 @@
 #define ACTIVE_STATE_INIT_BRIGHTNESS     (12)
 
 #define ACTIVE_STATE_INC_INTERVAL_MS          (15)
-#define STABLE_ACTIVE_STATE_INC_INTERVAL_MS   (10)
+
+#define STABLE_ACTIVE_INC_INTERVAL_MS     (5)
+#define STABLE_ACTIVE_MAX_BRIGHTNESS      (126)
+#define STABLE_ACTIVE_MIN_BRIGHTNESS      (26)
+#define STABLE_ACTIVE_BRIGHTNESS_DELTA    (STABLE_ACTIVE_MAX_BRIGHTNESS-STABLE_ACTIVE_MIN_BRIGHTNESS)
+#define STABLE_ACTIVE_BRIGHTNESS_OFFSET     (STABLE_ACTIVE_BRIGHTNESS_DELTA/5)
+
 
 #define ACTIVE_STATE_NUM_OF_TILT          (5)
 
@@ -281,7 +286,6 @@ static void active_state_cb(void)
 
       tilt_index++;
 
-
       if(tilt_index < ACTIVE_STATE_NUM_OF_TILT+1)
       {
         generalTimerId = timer.setTimer(activeSequenceTiming[tilt_index]/267,
@@ -293,7 +297,7 @@ static void active_state_cb(void)
 }
 
 
-static void sleep_state_cb(void)
+static void stable_active_state_cb(void)
 {
 
   static unsigned int step_index = 0;
@@ -303,6 +307,106 @@ static void sleep_state_cb(void)
   const unsigned int halfway_pt = (SLEEP_STATE_BRIGHTNESS_DELTA);
 
 
+  for(int i = 0; i < 5; i++)
+  {
+    if (step_index == i*STABLE_ACTIVE_BRIGHTNESS_OFFSET)
+    {
+      *(inc_array[i]) = 1;
+    }
+    else if (step_index == i*STABLE_ACTIVE_BRIGHTNESS_OFFSET + halfway_pt+1)
+    {
+      *(inc_array[i]) = -1;
+    }
+    else if (step_index == i*STABLE_ACTIVE_BRIGHTNESS_OFFSET + 2*halfway_pt+1)
+    {
+      *(inc_array[i]) = 0;
+    }
+
+    *(level_array[i]) += *(inc_array[i]);
+  }
+
+  //Head
+  acdimmer_bulb_set(5,w_level);
+  acdimmer_bulb_set(4,w_level);
+
+  acdimmer_bulb_set(3,x_level);
+  acdimmer_bulb_set(11,x_level);
+
+  acdimmer_bulb_set(9,y_level);
+  acdimmer_bulb_set(8,y_level);
+
+  acdimmer_bulb_set(7,z_level);
+  acdimmer_bulb_set(1,z_level);
+
+  acdimmer_bulb_set(6,a_level);
+  acdimmer_bulb_set(0,a_level);
+
+
+  acdimmer_bulb_set(10,128);
+  acdimmer_bulb_set(2,128);
+
+  step_index++;
+
+  //everything's done, go back to beginning
+  if (step_index == 4*STABLE_ACTIVE_BRIGHTNESS_OFFSET+2*halfway_pt+2 + 10)
+  {
+    step_index = 0;
+    for(int i = 0; i < 5; i++)
+    {
+      *(level_array[i]) = STABLE_ACTIVE_MIN_BRIGHTNESS;
+    }
+  }
+
+}
+
+void all_state_variables_reset(void)
+{
+  w_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  x_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  y_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  z_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  a_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  b_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  c_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  d_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  e_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  f_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  g_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+  h_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
+
+  w_inc = 0;
+  x_inc = 0;
+  y_inc = 0;
+  z_inc = 0;
+  a_inc = 0;
+  b_inc = 0;
+  c_inc = 0;
+  d_inc = 0;
+  e_inc = 0;
+  f_inc = 0;
+  g_inc = 0;
+  h_inc = 0;
+
+  digitalWrite(ACTIVATION_PIN, HIGH);
+  digitalWrite(SLEEP_PIN, HIGH);
+  digitalWrite(STOP_PIN, HIGH);
+
+  activeSequenceCount = 0;
+  timer.disable(generalTimerId);
+}
+
+void bulb_timer_run(void)
+{
+  timer.run();
+}
+
+void sleep_state_cb(void)
+{
+  static unsigned int step_index = 0;
+
+  //---------------------------------
+
+  const unsigned int halfway_pt = (SLEEP_STATE_BRIGHTNESS_DELTA);
 
   for(int i = 0; i < 6; i++)
   {
@@ -352,53 +456,6 @@ static void sleep_state_cb(void)
       *(level_array[i]) = SLEEP_STATE_MIN_BRIGHTNESS;
     }
   }
-
-}
-
-void all_state_variables_reset(void)
-{
-  w_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  x_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  y_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  z_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  a_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  b_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  c_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  d_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  e_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  f_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  g_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-  h_level = SLEEP_STATE_MIN_BRIGHTNESS - 1;
-
-  w_inc = 0;
-  x_inc = 0;
-  y_inc = 0;
-  z_inc = 0;
-  a_inc = 0;
-  b_inc = 0;
-  c_inc = 0;
-  d_inc = 0;
-  e_inc = 0;
-  f_inc = 0;
-  g_inc = 0;
-  h_inc = 0;
-
-  digitalWrite(ACTIVATION_PIN, HIGH);
-  digitalWrite(SLEEP_PIN, HIGH);
-  digitalWrite(STOP_PIN, HIGH);
-
-  activeSequenceCount = 0;
-  timer.disable(generalTimerId);
-}
-
-void bulb_timer_run(void)
-{
-  timer.run();
-}
-
-void stable_active_state_cb(void)
-{
-  Serial.println("Stable");
 }
 
 static void motor_ctrl_bwd(void)
@@ -414,7 +471,7 @@ static void motor_ctrl_bwd(void)
   {
     activeSequenceCount = 0;
     digitalWrite(STOP_PIN, LOW);
-    generalTimerId = timer.setInterval(STABLE_ACTIVE_STATE_INC_INTERVAL_MS, stable_active_state_cb);
+    generalTimerId = timer.setInterval(STABLE_ACTIVE_INC_INTERVAL_MS, stable_active_state_cb);
   }
 }
 
@@ -431,7 +488,7 @@ static void motor_ctrl_fwd(void)
   {
     activeSequenceCount = 0;
     digitalWrite(STOP_PIN, LOW);
-    generalTimerId = timer.setInterval(STABLE_ACTIVE_STATE_INC_INTERVAL_MS, stable_active_state_cb);
+    generalTimerId = timer.setInterval(STABLE_ACTIVE_INC_INTERVAL_MS, stable_active_state_cb);
   }
 }
 
