@@ -26,7 +26,7 @@ void setup() {
   digitalWrite(FORWARD_LIMIT_PIN, INPUT_PULLUP);
   digitalWrite(BACKWARD_LIMIT_PIN, INPUT_PULLUP); //These are pulled LOW when the foam board touches either limit
 
-  motor.setSpeed(2);  // 10 rpm
+  motor.setSpeed(5);  // 10 rpm
 
   homing = true;
 
@@ -55,7 +55,7 @@ void setup() {
     }
   }
   step_position = 0;
-  motor.release();
+  motor.setSpeed(2);
 }
 
 void loop()

@@ -23,7 +23,7 @@ static unsigned int off_array[NUM_OF_LIGHTS] = {OFF_VAL,OFF_VAL,OFF_VAL,OFF_VAL,
 
 Average<int> right_stats(SAMPLE_FILTER_COUNT);
 
-SimpleTimer mic_timer;
+SimpleTimer m_timer;
 
 uint8_t currentSensor = 0;          // Keeps track of which sensor is active.
 
@@ -50,22 +50,22 @@ void setup()
    pin[i] = i + 22; //assign pins 22 - 33 to control light dimming
  }
 
-
   // mic_init();
-  // mic_timer.setInterval(50,mic_sample);
+  // m_timer.setInterval(50,mic_sample);
 
-  delay(20000); //Wait for motor to home itself on bootup.
-
+ //Wait for motor to home itself on bootup.
   acdimmer_init(NUM_OF_LIGHTS,pin);
   acdimmer_enable();
-  active_state_enter();
+  sleep_state_enter();
+  m_timer.setTimeout(20000, active_state_enter);
 }
 
 void loop()
 {
   bulb_timer_run();
-  // mic_timer.run();
-  //pingSensorRun();
+
+  m_timer.run();
+
   // }
 }
 
